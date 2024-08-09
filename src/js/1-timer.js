@@ -8,15 +8,74 @@ import iziToast from "izitoast";
 import "izitoast/dist/css/iziToast.min.css";
 
 
+const inputData = document.querySelector("#datetime-picker")
+const button = document.querySelector("[data-start]")
+const daysValue = document.querySelector("[data-days]")
+const hoursValue = document.querySelector("[data-hours]")
+const minutesValue = document.querySelector("[data-minutes]")
+const secondsValue = document.querySelector("[data-seconds]")
+
+let userSelectedDate = null;
+let intervalId = null;
+button.disabled = true;
+
+
 const options = {
   enableTime: true,
   time_24hr: true,
   defaultDate: new Date(),
   minuteIncrement: 1,
   onClose(selectedDates) {
-    console.log(selectedDates[0]);
+    userSelectedDate = selectedDates[0]
+    if (userSelectedDate < Date.now()) {
+        iziToast.error({
+            title: 'Error',
+            message: 'Please choose a date in the future',
+        });
+      button.disabled = true;
+    }  else { 
+      button.disabled = false;
+    }
   },
 };
+
+flatpickr("#datetime-picker", options);
+
+
+button.addEventListener("click", handleClick)
+
+function handleClick() {
+  button.disabled = true;
+  inputData.disabled = true;
+intervalId = setInterval(timeCountdown, 1000)
+}
+  
+function timeCountdown() {
+   button.disabled = true;
+  inputData.disabled = true;
+  const timeNow = new Date();
+  const diff = userSelectedDate - timeNow;
+
+  if (diff <= 0) {
+      clearInterval(intervalId);
+    updateTimer({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+    inputData.disabled = false;    
+    return;
+  }
+  const timeComponents = convertMs(diff);
+  updateTimer(timeComponents);
+}
+function updateTimer({ days, hours, minutes, seconds }) {
+  daysValue.textContent = addLeadingZero(days);
+  hoursValue.textContent = addLeadingZero(hours);
+  minutesValue.textContent = addLeadingZero(minutes);
+  secondsValue.textContent = addLeadingZero(seconds);
+}
+function addLeadingZero(value){
+return String(value).padStart(2, "0")
+}
+
+
 function convertMs(ms) {
   // Number of milliseconds per unit of time
   const second = 1000;
@@ -36,6 +95,7 @@ function convertMs(ms) {
   return { days, hours, minutes, seconds };
 }
 
-console.log(convertMs(2000)); // {days: 0, hours: 0, minutes: 0, seconds: 2}
-console.log(convertMs(140000)); // {days: 0, hours: 0, minutes: 2, seconds: 20}
-console.log(convertMs(24140000)); // {days: 0, hours: 6 minutes: 42, seconds: 20}
+// console.log(convertMs(2000)); // {days: 0, hours: 0, minutes: 0, seconds: 2}
+// console.log(convertMs(140000)); // {days: 0, hours: 0, minutes: 2, seconds: 20}
+// console.log(convertMs(24140000)); // {days: 0, hours: 6 minutes: 42, seconds: 20}
+
